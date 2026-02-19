@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>План питания — Астана</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Onest:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0d0d; --card: #161616; --accent: #c8f542; --accent2: #42f5c8;
+  --text: #f0f0f0; --muted: #666; --border: #2a2a2a;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Onest', sans-serif; min-height: 100vh; padding: 24px 16px 80px; overflow-x: hidden; }
+.grain { position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); }
+.container { max-width: 720px; margin: 0 auto; }
+
+/* SETUP SCREEN */
+#setup-screen { animation: fadeUp 0.6s ease both; }
+#main-screen { display: none; }
+
+.setup-hero { margin-bottom: 40px; }
+.tag { display: inline-block; background: var(--accent); color: #000; font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; padding: 4px 10px; border-radius: 2px; margin-bottom: 16px; text-transform: uppercase; }
+h1 { font-family: 'Unbounded', sans-serif; font-size: clamp(26px, 6vw, 48px); font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; }
+h1 span { color: var(--accent); }
+.subtitle { color: var(--muted); margin-top: 10px; font-size: 14px; }
+
+.setup-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+.setup-title { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 20px; color: var(--accent); letter-spacing: 0.05em; }
+
+.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.input-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-group.full { grid-column: 1 / -1; }
+
+.input-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+.input-field {
+  background: #111; border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: 'Onest', sans-serif; font-size: 16px;
+  padding: 12px 14px; width: 100%; outline: none; transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--accent); }
+
+select.input-field { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+
+/* Live preview */
+.preview-box {
+  background: rgba(200,245,66,0.06); border: 1px solid rgba(200,245,66,0.15);
+  border-radius: 12px; padding: 18px; margin-top: 20px;
+}
+.preview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.preview-item { text-align: center; }
+.preview-val { font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 700; color: var(--accent); }
+.preview-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+.btn-start {
+  width: 100%; background: var(--accent); color: #000; border: none;
+  border-radius: 12px; font-family: 'Unbounded', sans-serif; font-size: 14px;
+  font-weight: 900; padding: 16px; cursor: pointer; margin-top: 20px;
+  transition: opacity 0.2s; letter-spacing: 0.05em;
+}
+.btn-start:hover { opacity: 0.85; }
+
+/* MAIN */
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.top-bar h2 { font-family: 'Unbounded', sans-serif; font-size: clamp(20px, 4vw, 32px); font-weight: 900; line-height: 1.2; }
+.top-bar h2 span { color: var(--accent); }
+.edit-btn { font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-family: 'Onest', sans-serif; transition: all 0.2s; white-space: nowrap; }
+.edit-btn:hover { border-color: var(--accent); color: var(--text); }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.tab { font-family: 'Unbounded', sans-serif; font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: 100px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.tab:hover { border-color: var(--accent); color: var(--text); }
+.tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.stat-val { font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.progress-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+.progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.progress-title { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700; }
+.progress-text { font-size: 13px; color: var(--muted); }
+.bar-track { background: #222; border-radius: 100px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent2), var(--accent)); width: 0%; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+.milestones { display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; color: var(--muted); }
+
+.weight-input-row { display: flex; gap: 10px; margin-top: 16px; }
+.weight-input-row input { background: #111; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Onest', sans-serif; font-size: 16px; padding: 10px 14px; width: 100%; outline: none; transition: border-color 0.2s; }
+.weight-input-row input:focus { border-color: var(--accent); }
+.btn { background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: 'Unbounded', sans-serif; font-size: 12px; font-weight: 700; padding: 10px 16px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+.btn:hover { opacity: 0.85; }
+
+.section { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.section-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.green-bg { background: rgba(200,245,66,0.12); }
+.teal-bg  { background: rgba(66,245,200,0.12); }
+.red-bg   { background: rgba(245,100,66,0.12); }
+.section-title { font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; }
+
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.checklist li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.5; cursor: pointer; padding: 10px 12px; border-radius: 8px; border: 1px solid transparent; transition: all 0.2s; user-select: none; }
+.checklist li:hover { background: #1e1e1e; border-color: var(--border); }
+.checklist li.done { opacity: 0.4; }
+.checklist li.done .check-circle { background: var(--accent); border-color: var(--accent); }
+.checklist li.done .check-circle::after { opacity: 1; }
+.check-circle { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%; flex-shrink: 0; margin-top: 1px; position: relative; transition: all 0.2s; }
+.check-circle::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000; font-weight: 700; opacity: 0; transition: opacity 0.2s; }
+
+.timeline { display: flex; flex-direction: column; }
+.tl-item { display: flex; gap: 16px; padding-bottom: 20px; position: relative; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); flex-shrink: 0; margin-top: 4px; position: relative; z-index: 1; }
+.tl-item:not(:last-child) .tl-dot::after { content: ''; position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: 1px; height: calc(100% + 20px); background: var(--border); }
+.tl-dot.active { background: var(--accent); }
+.tl-dot.active::after { background: linear-gradient(var(--accent), var(--border)); }
+.tl-month { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.tl-goal { font-size: 14px; font-weight: 500; }
+.tl-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.macro-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.macro-pill { flex: 1; min-width: 70px; background: #111; border-radius: 10px; padding: 12px; text-align: center; }
+.macro-val { font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700; }
+.macro-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.c-protein { color: var(--accent); } .c-carbs { color: var(--accent2); } .c-fat { color: #f5a442; }
+
+.budget-banner { background: rgba(200,245,66,0.08); border: 1px solid rgba(200,245,66,0.2); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--accent); }
+.budget-banner strong { font-family: 'Unbounded', sans-serif; font-size: 15px; }
+
+.day-selector { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.day-btn { font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 700; padding: 6px 12px; border-radius: 100px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.day-btn:hover { border-color: var(--accent2); color: var(--text); }
+.day-btn.active { background: var(--accent2); color: #000; border-color: var(--accent2); }
+
+.meal-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.meal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.meal-name { font-family: 'Unbounded', sans-serif; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.meal-kcal { font-family: 'Unbounded', sans-serif; font-size: 12px; color: var(--accent); }
+.meal-items { display: flex; flex-direction: column; gap: 6px; }
+.meal-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid #1e1e1e; }
+.meal-item:last-child { border-bottom: none; }
+.meal-item-grams { color: var(--muted); font-size: 13px; }
+
+.daily-total { background: rgba(200,245,66,0.08); border: 1px solid rgba(200,245,66,0.2); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.daily-total-label { font-size: 13px; color: var(--muted); }
+.daily-total-val { font-family: 'Unbounded', sans-serif; font-size: 16px; color: var(--accent); }
+.daily-cost { background: rgba(66,245,200,0.06); border: 1px solid rgba(66,245,200,0.15); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.daily-cost-label { font-size: 13px; color: var(--muted); }
+.daily-cost-val { font-family: 'Unbounded', sans-serif; font-size: 15px; color: var(--accent2); }
+
+.grocery-section { margin-bottom: 20px; }
+.grocery-title { font-family: 'Unbounded', sans-serif; font-size: 12px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+.grocery-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 8px; background: #111; margin-bottom: 6px; font-size: 14px; }
+.grocery-price { font-family: 'Unbounded', sans-serif; font-size: 12px; color: var(--accent2); }
+.grocery-total { background: rgba(66,245,200,0.08); border: 1px solid rgba(66,245,200,0.2); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+
+.workout-day { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.workout-day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.workout-day-name { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700; }
+.workout-badge { font-size: 11px; padding: 3px 10px; border-radius: 100px; font-weight: 500; }
+.badge-strength { background: rgba(200,245,66,0.15); color: var(--accent); }
+.badge-cardio   { background: rgba(66,245,200,0.15); color: var(--accent2); }
+.badge-rest     { background: rgba(255,255,255,0.06); color: var(--muted); }
+.exercise-list { display: flex; flex-direction: column; gap: 8px; }
+.exercise { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 8px 10px; border-radius: 8px; background: #111; cursor: pointer; user-select: none; transition: background 0.2s; }
+.exercise:hover { background: #1a1a1a; }
+.exercise.done-ex { opacity: 0.4; }
+.ex-sets { font-size: 12px; color: var(--muted); font-family: 'Unbounded', sans-serif; }
+.rest-day { text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.rest-day span { display: block; font-size: 32px; margin-bottom: 8px; }
+
+.bmi-badge { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; margin-top: 6px; }
+.bmi-normal { background: rgba(200,245,66,0.15); color: var(--accent); }
+.bmi-over   { background: rgba(245,160,66,0.15); color: #f5a042; }
+.bmi-obese  { background: rgba(245,80,66,0.15); color: #f55042; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="container">
+
+<!-- ========== SETUP SCREEN ========== -->
+<div id="setup-screen">
+  <div class="setup-hero">
+    <div class="tag">Настройка плана</div>
+    <h1>Введи свои<br><span>параметры</span></h1>
+    <p class="subtitle">Система сама рассчитает калории, БЖУ и план</p>
+  </div>
+
+  <div class="setup-card">
+    <div class="setup-title">👤 Основные данные</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <div class="input-label">Пол</div>
+        <select class="input-field" id="s-gender" onchange="calcPreview()">
+          <option value="m">Мужской</option>
+          <option value="f">Женский</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <div class="input-label">Возраст (лет)</div>
+        <input class="input-field" type="number" id="s-age" placeholder="30" min="15" max="80" value="28" oninput="calcPreview()">
+      </div>
+      <div class="input-group">
+        <div class="input-label">Рост (см)</div>
+        <input class="input-field" type="number" id="s-height" placeholder="180" min="140" max="220" value="180" oninput="calcPreview()">
+      </div>
+      <div class="input-group">
+        <div class="input-label">Текущий вес (кг)</div>
+        <input class="input-field" type="number" id="s-weight" placeholder="94" min="40" max="250" step="0.1" value="94" oninput="calcPreview()">
+      </div>
+      <div class="input-group">
+        <div class="input-label">Желаемый вес (кг)</div>
+        <input class="input-field" type="number" id="s-target" placeholder="77" min="40" max="250" step="0.1" value="77" oninput="calcPreview()">
+      </div>
+      <div class="input-group">
+        <div class="input-label">Активность</div>
+        <select class="input-field" id="s-activity" onchange="calcPreview()">
+          <option value="1.2" selected>Сидячий образ жизни</option>
+          <option value="1.375">Лёгкая активность (1–2 раза/нед)</option>
+          <option value="1.55">Средняя (3–4 раза/нед)</option>
+          <option value="1.725">Высокая (5–6 раз/нед)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="preview-box">
+      <div style="font-size:12px; color:var(--muted); margin-bottom:14px; font-family:'Unbounded',sans-serif; font-size:11px; letter-spacing:0.1em; text-transform:uppercase;">Твои расчёты</div>
+      <div class="preview-grid">
+        <div class="preview-item"><div class="preview-val" id="p-bmi">—</div><div class="preview-label">ИМТ</div></div>
+        <div class="preview-item"><div class="preview-val" id="p-diff">—</div><div class="preview-label" id="p-diff-label">Сбросить кг</div></div>
+        <div class="preview-item"><div class="preview-val" id="p-kcal">—</div><div class="preview-label">ккал/день</div></div>
+        <div class="preview-item"><div class="preview-val" id="p-months">—</div><div class="preview-label">Месяцев</div></div>
+        <div class="preview-item"><div class="preview-val" id="p-protein">—</div><div class="preview-label">Белок г/день</div></div>
+        <div class="preview-item"><div class="preview-val" id="p-tdee">—</div><div class="preview-label">Ваш TDEE</div></div>
+      </div>
+    </div>
+
+    <button class="btn-start" onclick="startPlan()">🚀 Создать мой план</button>
+  </div>
+</div>
+
+<!-- ========== MAIN SCREEN ========== -->
+<div id="main-screen">
+  <div class="top-bar">
+    <h2 id="main-title">Минус <span id="t-diff">—</span> кг</h2>
+    <button class="edit-btn" onclick="goBack()">✏️ Изменить параметры</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('tracker')">📊 Трекер</button>
+    <button class="tab" onclick="switchTab('food')">🥗 Питание</button>
+    <button class="tab" onclick="switchTab('grocery')">🛒 Покупки</button>
+    <button class="tab" onclick="switchTab('workout')">💪 Тренировки</button>
+    <button class="tab" onclick="switchTab('rules')">📋 Правила</button>
+  </div>
+
+  <!-- TRACKER -->
+  <div id="tab-tracker" class="tab-content active">
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="t-current">—</div><div class="stat-label">Сейчас, кг</div></div>
+      <div class="stat"><div class="stat-val" id="t-target">—</div><div class="stat-label">Цель, кг</div></div>
+      <div class="stat"><div class="stat-val" id="t-lost">0</div><div class="stat-label" id="stat-delta-label">Сброшено, кг</div></div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <div class="progress-title">Прогресс</div>
+        <div class="progress-text" id="progress-text">0 из — кг</div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="bar"></div></div>
+      <div class="milestones">
+        <span id="m-start">—</span>
+        <span id="m-mid">—</span>
+        <span id="m-end">—</span>
+      </div>
+      <div class="weight-input-row">
+        <input type="number" id="weight-log" placeholder="Введи сегодняшний вес (кг)" step="0.1" min="40" max="250">
+        <button class="btn" onclick="logWeight()">Записать</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-icon green-bg">📊</div><div class="section-title">Твои показатели</div></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:#111; border-radius:10px; padding:14px; text-align:center;">
+          <div style="font-family:'Unbounded',sans-serif; font-size:18px; color:var(--accent)" id="i-bmi">—</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">ИМТ</div>
+          <div id="i-bmi-label" class="bmi-badge bmi-over" style="margin-top:6px;">—</div>
+        </div>
+        <div style="background:#111; border-radius:10px; padding:14px; text-align:center;">
+          <div style="font-family:'Unbounded',sans-serif; font-size:18px; color:var(--accent2)" id="i-tdee">—</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">TDEE (расход ккал)</div>
+        </div>
+        <div style="background:#111; border-radius:10px; padding:14px; text-align:center;">
+          <div style="font-family:'Unbounded',sans-serif; font-size:18px; color:var(--accent)" id="i-kcal">—</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;" id="kcal-label">ккал/день (план)</div>
+        </div>
+        <div style="background:#111; border-radius:10px; padding:14px; text-align:center;">
+          <div style="font-family:'Unbounded',sans-serif; font-size:18px; color:#f5a442" id="i-months">—</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">месяцев до цели</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-icon green-bg">📅</div><div class="section-title">Дорожная карта</div></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <!-- FOOD -->
+  <div id="tab-food" class="tab-content">
+    <div class="budget-banner">
+      <span style="font-size:24px">💰</span>
+      <div id="food-banner-text"><strong id="food-banner-kcal">~2 500 ₸/день</strong><br><span style="font-size:12px; color:var(--muted)" id="food-banner-sub">Астана — Магнум / Small / Арзан</span></div>
+    </div>
+    <div class="macro-row" id="macro-row"></div>
+    <div class="day-selector">
+      <button class="day-btn active" onclick="switchDay(0,this)">ПН</button>
+      <button class="day-btn" onclick="switchDay(1,this)">ВТ</button>
+      <button class="day-btn" onclick="switchDay(2,this)">СР</button>
+      <button class="day-btn" onclick="switchDay(3,this)">ЧТ</button>
+      <button class="day-btn" onclick="switchDay(4,this)">ПТ</button>
+      <button class="day-btn" onclick="switchDay(5,this)">СБ</button>
+      <button class="day-btn" onclick="switchDay(6,this)">ВС</button>
+    </div>
+    <div id="meal-plan"></div>
+  </div>
+
+  <!-- GROCERY -->
+  <div id="tab-grocery" class="tab-content">
+    <div class="section">
+      <div class="section-header"><div class="section-icon teal-bg">🛒</div><div class="section-title">Список на неделю — Астана</div></div>
+      <div id="grocery-content"><!-- rendered by JS --></div>
+    </div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div id="tab-workout" class="tab-content">
+    <div class="section" style="margin-bottom:20px; padding:16px 20px;">
+      <div style="font-size:13px; color:var(--muted); line-height:1.6;">
+        <strong style="color:var(--text)">Схема:</strong> 3 силовых + 2 кардио в неделю. Первые 4 недели — лёгкий режим. Нажимай на упражнения чтобы отмечать.
+      </div>
+    </div>
+    <div id="workout-plan"></div>
+  </div>
+
+  <!-- RULES -->
+  <div id="tab-rules" class="tab-content">
+    <div class="section">
+      <div class="section-header"><div class="section-icon green-bg">✅</div><div class="section-title">Чеклист на каждый день</div></div>
+      <ul class="checklist" id="daily-checklist"></ul>
+    </div>
+    <div class="section">
+      <div class="section-header"><div class="section-icon red-bg">🚫</div><div class="section-title">Не делай этого</div></div>
+      <ul class="checklist">
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Голодовки и жёсткие диеты</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Паниковать от +1 кг (это вода)</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Только кардио без силовых</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Пить соки, газировку, алкоголь</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Ждать идеального момента</span></li>
+      </ul>
+    </div>
+    <div class="section">
+      <div class="section-header"><div class="section-icon teal-bg">💡</div><div class="section-title">Принципы</div></div>
+      <ul class="checklist">
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Дефицит ~400–500 ккал/день — этого достаточно</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Высокий белок сохраняет мышцы при похудении</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Плато — нормально, просто держи курс</span></li>
+        <li onclick="toggle(this)"><div class="check-circle"></div><span>Сон 7–8 часов — часть плана, не опция</span></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</div><!-- /container -->
+
+<script>
+// ===== USER DATA =====
+let U = {};
+
+// ===== SETUP PREVIEW =====
+function calcPreview() {
+  const gender = document.getElementById('s-gender').value;
+  const age    = parseFloat(document.getElementById('s-age').value) || 0;
+  const height = parseFloat(document.getElementById('s-height').value) || 0;
+  const weight = parseFloat(document.getElementById('s-weight').value) || 0;
+  const target = parseFloat(document.getElementById('s-target').value) || 0;
+  const activity = parseFloat(document.getElementById('s-activity').value) || 1.2;
+
+  if (!age || !height || !weight || !target) return;
+
+  const bmr = gender === 'm'
+    ? 10 * weight + 6.25 * height - 5 * age + 5
+    : 10 * weight + 6.25 * height - 5 * age - 161;
+
+  const tdee   = Math.round(bmr * activity);
+  const isGain = target > weight;
+  const diff   = Math.abs(weight - target);
+  const kcalP  = isGain ? Math.round(tdee + 400) : Math.max(1400, tdee - 450);
+  const kcal   = kcalP;
+  const months = isGain ? Math.ceil(diff / 1.5) : Math.ceil(diff / 2);
+  const protein= Math.round(weight * 1.6);
+  const bmi    = (weight / ((height/100) ** 2)).toFixed(1);
+
+  document.getElementById('p-bmi').textContent    = bmi;
+  document.getElementById('p-diff').textContent   = diff.toFixed(1) + ' кг';
+  document.getElementById('p-diff-label').textContent = isGain ? 'Набрать кг' : 'Сбросить кг';
+  document.getElementById('p-kcal').textContent   = kcal + ' ккал';
+  document.getElementById('p-months').textContent = months + ' мес';
+  document.getElementById('p-protein').textContent= protein + 'г';
+  document.getElementById('p-tdee').textContent   = tdee + ' ккал';
+}
+
+// ===== START =====
+function startPlan() {
+  U.gender   = document.getElementById('s-gender').value;
+  U.age      = parseFloat(document.getElementById('s-age').value);
+  U.height   = parseFloat(document.getElementById('s-height').value);
+  U.weight   = parseFloat(document.getElementById('s-weight').value);
+  U.target   = parseFloat(document.getElementById('s-target').value);
+  U.activity = parseFloat(document.getElementById('s-activity').value);
+
+  if (!U.age || !U.height || !U.weight || !U.target) { alert('Заполни все поля!'); return; }
+  if (U.target === U.weight) { alert('Желаемый и текущий вес одинаковые — измени цель'); return; }
+
+  const bmr = U.gender === 'm'
+    ? 10 * U.weight + 6.25 * U.height - 5 * U.age + 5
+    : 10 * U.weight + 6.25 * U.height - 5 * U.age - 161;
+
+  U.tdee    = Math.round(bmr * U.activity);
+  U.gain    = U.target > U.weight; // true = bulking, false = cutting
+  U.kcal    = U.gain
+    ? Math.round(U.tdee + 400)           // surplus ~400 kcal
+    : Math.max(1400, U.tdee - 450);      // deficit ~450 kcal
+  U.diff    = Math.abs(+(U.weight - U.target).toFixed(1));
+  U.months  = U.gain
+    ? Math.ceil(U.diff / 1.5)            // gaining ~1.5 kg/month
+    : Math.ceil(U.diff / 2);             // losing ~2 kg/month
+  U.protein = U.gain
+    ? Math.round(U.weight * 2.0)         // more protein for muscle
+    : Math.round(U.weight * 1.6);
+  U.carbs   = Math.round((U.kcal * (U.gain ? 0.45 : 0.40)) / 4);
+  U.fat     = Math.round((U.kcal * 0.25) / 9);
+  U.bmi     = (U.weight / ((U.height/100) ** 2)).toFixed(1);
+  U.current = U.weight;
+
+  buildMainScreen();
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+}
+
+function goBack() {
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('main-screen').style.display = 'none';
+}
+
+// ===== BUILD MAIN =====
+function buildMainScreen() {
+  // title
+  document.getElementById('main-title').innerHTML = `${U.gain ? 'Плюс' : 'Минус'} <span style="color:var(--accent)">${U.diff} кг</span> за ${U.months} мес.`;
+
+  // tracker stats
+  document.getElementById('t-current').textContent = U.weight;
+  document.getElementById('stat-delta-label').textContent = U.gain ? 'Набрано, кг' : 'Сброшено, кг';
+  document.getElementById('t-target').textContent  = U.target;
+  document.getElementById('t-lost').textContent    = '0';
+  document.getElementById('progress-text').textContent = `0 из ${U.diff} кг`;
+  document.getElementById('m-start').textContent   = U.weight + ' кг';
+  document.getElementById('m-mid').textContent     = Math.round((U.weight + U.target)/2) + ' кг';
+  document.getElementById('m-end').textContent     = U.target + ' кг';
+  setTimeout(() => document.getElementById('bar').style.width = '0%', 100);
+
+  // indicators
+  document.getElementById('i-bmi').textContent   = U.bmi;
+  document.getElementById('i-tdee').textContent  = U.tdee + ' ккал';
+  document.getElementById('i-kcal').textContent  = U.kcal + ' ккал';
+  document.getElementById('i-months').textContent= U.months;
+  document.getElementById('kcal-label').textContent = U.gain ? 'ккал/день (профицит)' : 'ккал/день (дефицит)';
+
+  const bmiVal = parseFloat(U.bmi);
+  U.gain_label = U.gain ? ' · набор' : ' · похудение';
+  const bmiEl  = document.getElementById('i-bmi-label');
+  if (bmiVal < 25)      { bmiEl.className='bmi-badge bmi-normal'; bmiEl.textContent='Норма'; }
+  else if (bmiVal < 30) { bmiEl.className='bmi-badge bmi-over';   bmiEl.textContent='Избыток'; }
+  else                  { bmiEl.className='bmi-badge bmi-obese';  bmiEl.textContent='Ожирение'; }
+
+  // timeline
+  buildTimeline();
+
+  // macros
+  document.getElementById('macro-row').innerHTML = `
+    <div class="macro-pill"><div class="macro-val c-protein">${U.protein}г</div><div class="macro-label">Белок</div></div>
+    <div class="macro-pill"><div class="macro-val c-carbs">${U.carbs}г</div><div class="macro-label">Углеводы</div></div>
+    <div class="macro-pill"><div class="macro-val c-fat">${U.fat}г</div><div class="macro-label">Жиры</div></div>
+    <div class="macro-pill"><div class="macro-val" style="color:var(--text)">${U.kcal}</div><div class="macro-label">ккал</div></div>
+  `;
+
+  document.getElementById('food-banner-kcal').textContent = U.gain ? 'Профицит +400 ккал · ' + U.kcal + ' ккал/день' : 'Дефицит −450 ккал · ' + U.kcal + ' ккал/день';
+  document.getElementById('food-banner-sub').textContent = U.gain ? 'Цель — набор мышечной массы' : 'Астана — Магнум / Small / Арзан';
+  // checklist
+  const dailyKcalText = `Калории: ${U.kcal} ккал/день (${U.gain ? 'профицит +400' : 'дефицит −450'} от нормы)`;
+  const proteinText   = `Белок: ${U.protein} г/день`;
+  document.getElementById('daily-checklist').innerHTML = [
+    dailyKcalText, proteinText, 'Вода 2.5–3 литра', '10 000 шагов',
+    'Не есть за 2–3 часа до сна', 'Взвесился утром натощак'
+  ].map(t => `<li onclick="toggle(this)"><div class="check-circle"></div><span>${t}</span></li>`).join('');
+
+  renderMeals(0);
+  renderWorkout();
+  renderGrocery();
+}
+
+// ===== TIMELINE =====
+function buildTimeline() {
+  let w = U.weight;
+  let html = '';
+  const steps = Math.min(U.months, 12);
+  for (let i = 0; i < steps; i += 2) {
+    const mStart = i + 1, mEnd = Math.min(i + 2, U.months);
+    const perMonthDir = U.gain ? 1.5 : 2;
+    const wEnd = U.gain
+      ? Math.min(U.target, +(w + perMonthDir * (mEnd - mStart + 1)).toFixed(1))
+      : Math.max(U.target, +(w - perMonthDir * (mEnd - mStart + 1)).toFixed(1));
+    const isFirst = i === 0;
+    let note = i === 0 ? (U.gain ? 'Начало — питание + тренировки' : 'Привычки, режим') : i <= 4 ? 'Тело адаптируется, прогресс идёт' : i <= 6 ? (U.gain ? 'Набор идёт, держи профицит' : 'Возможно плато — держи курс') : 'Финишная прямая';
+    const atGoal = U.gain ? wEnd >= U.target : wEnd <= U.target;
+    if (atGoal) note = 'Финишная прямая 🎯';
+    html += `<div class="tl-item">
+      <div class="tl-dot ${isFirst ? 'active' : ''}"></div>
+      <div>
+        <div class="tl-month">Месяц ${mStart}${mEnd > mStart ? '–' + mEnd : ''}</div>
+        <div class="tl-goal">${w} → ${wEnd} кг</div>
+        <div class="tl-note">${note}</div>
+      </div>
+    </div>`;
+    w = wEnd;
+    if (atGoal) break;
+  }
+  document.getElementById('timeline').innerHTML = html;
+}
+
+// ===== WEIGHT LOG =====
+function logWeight() {
+  const val = parseFloat(document.getElementById('weight-log').value);
+  if (!val || val < 40 || val > 250) return;
+  U.current = val;
+  const delta = U.gain
+    ? Math.max(0, val - U.weight)
+    : Math.max(0, U.weight - val);
+  const pct  = Math.min(100, (delta / U.diff) * 100);
+  document.getElementById('bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = delta.toFixed(1) + ' из ' + U.diff + ' кг';
+  document.getElementById('t-current').textContent = val.toFixed(1);
+  document.getElementById('t-lost').textContent    = delta.toFixed(1);
+}
+
+// ===== MEALS =====
+const mealTemplates = [
+  [
+    { name: 'Завтрак',  base: 490, items: [['Овсянка на воде','80г'],['Яйца варёные','3 шт'],['Банан','1 шт']] },
+    { name: 'Обед',     base: 620, items: [['Куриное бёдро (без кожи)','200г'],['Гречка','200г'],['Капустный салат','200г']] },
+    { name: 'Перекус',  base: 200, items: [['Творог 5%','150г'],['Яблоко','1 шт']] },
+    { name: 'Ужин',     base: 580, items: [['Скумбрия запечённая','200г'],['Картошка варёная','150г'],['Огурец + помидор','150г']] },
+  ],
+  [
+    { name: 'Завтрак',  base: 470, items: [['Омлет','3 яйца'],['Молоко','100мл'],['Хлеб цельнозерновой','1 ломтик']] },
+    { name: 'Обед',     base: 630, items: [['Куриный суп с гречкой','400мл'],['Куриное бёдро','150г']] },
+    { name: 'Перекус',  base: 190, items: [['Творог','150г'],['Банан','½ шт']] },
+    { name: 'Ужин',     base: 570, items: [['Яйца варёные','3 шт'],['Рис','150г'],['Замороженные овощи жареные','200г']] },
+  ],
+  [
+    { name: 'Завтрак',  base: 500, items: [['Овсянка','80г'],['Яйцо варёное','2 шт'],['Яблоко','1 шт']] },
+    { name: 'Обед',     base: 640, items: [['Скумбрия тушёная с луком','200г'],['Гречка','200г'],['Морковный салат','150г']] },
+    { name: 'Перекус',  base: 180, items: [['Творог','100г'],['Молоко','200мл']] },
+    { name: 'Ужин',     base: 560, items: [['Куриное бёдро запечённое','200г'],['Капуста тушёная','250г']] },
+  ],
+  [
+    { name: 'Завтрак',  base: 510, items: [['Яичница','3 яйца'],['Хлеб цельнозерновой','2 ломтика'],['Помидор','1 шт']] },
+    { name: 'Обед',     base: 610, items: [['Куриное бёдро','200г'],['Рис','150г'],['Огурец + капуста','200г']] },
+    { name: 'Перекус',  base: 200, items: [['Творог','150г'],['Банан','1 шт']] },
+    { name: 'Ужин',     base: 540, items: [['Скумбрия запечённая','200г'],['Гречка','150г'],['Зелень','—']] },
+  ],
+  [
+    { name: 'Завтрак',  base: 480, items: [['Овсянка','80г'],['Яйцо варёное','2 шт'],['Молоко','150мл']] },
+    { name: 'Обед',     base: 650, items: [['Куриный суп','400мл'],['Куриное бёдро','150г'],['Хлеб','1 ломтик']] },
+    { name: 'Перекус',  base: 180, items: [['Яйца варёные','2 шт'],['Огурец','1 шт']] },
+    { name: 'Ужин',     base: 570, items: [['Скумбрия жареная','200г'],['Картошка','150г'],['Капустный салат','150г']] },
+  ],
+  [
+    { name: 'Завтрак',  base: 520, items: [['Омлет с овощами','3 яйца'],['Помидор + огурец','150г'],['Хлеб','1 ломтик']] },
+    { name: 'Обед',     base: 660, items: [['Куриное бёдро тушёное','250г'],['Гречка','200г'],['Лук + морковь','100г']] },
+    { name: 'Перекус',  base: 190, items: [['Творог','150г'],['Яблоко','1 шт']] },
+    { name: 'Ужин',     base: 520, items: [['Скумбрия','200г'],['Замороженные овощи','200г']] },
+  ],
+  [
+    { name: 'Завтрак',  base: 490, items: [['Творожная запеканка (творог+яйца)','250г'],['Банан','1 шт']] },
+    { name: 'Обед',     base: 630, items: [['Куриное бёдро','200г'],['Рис','150г'],['Салат из капусты и моркови','200г']] },
+    { name: 'Перекус',  base: 200, items: [['Яйца варёные','3 шт'],['Огурец','1 шт']] },
+    { name: 'Ужин',     base: 540, items: [['Скумбрия тушёная','200г'],['Гречка','150г'],['Зелень','—']] },
+  ],
+];
+
+// Base day costs at 1890 kcal reference
+const baseDayCosts = [2600, 2500, 2550, 2600, 2450, 2800, 2700];
+function getDayCost(dayIdx) {
+  const ratio = U.kcal / 1890;
+  return Math.round(baseDayCosts[dayIdx] * ratio / 100) * 100;
+}
+
+function scaledKcal(base) {
+  // Scale meals proportionally to user's target kcal vs template total (~1890)
+  const templateTotal = 1890;
+  return Math.round(base * (U.kcal / templateTotal));
+}
+
+function renderMeals(dayIdx) {
+  const day = mealTemplates[dayIdx];
+  const total = day.reduce((s, m) => s + scaledKcal(m.base), 0);
+  let html = '';
+  day.forEach(m => {
+    html += `<div class="meal-card">
+      <div class="meal-header">
+        <div class="meal-name">${m.name}</div>
+        <div class="meal-kcal">${scaledKcal(m.base)} ккал</div>
+      </div>
+      <div class="meal-items">
+        ${m.items.map(i => `<div class="meal-item"><span>${i[0]}</span><span class="meal-item-grams">${i[1]}</span></div>`).join('')}
+      </div>
+    </div>`;
+  });
+  html += `<div class="daily-total"><span class="daily-total-label">Итого калорий</span><span class="daily-total-val">${total} ккал</span></div>`;
+  html += `<div class="daily-cost"><span class="daily-cost-label">💰 Стоимость дня</span><span class="daily-cost-val">~${getDayCost(dayIdx).toLocaleString()} ₸</span></div>`;
+  document.getElementById('meal-plan').innerHTML = html;
+}
+
+function switchDay(idx, btn) {
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMeals(idx);
+}
+
+
+// ===== GROCERY =====
+function renderGrocery() {
+  const r = U.kcal / 1890; // scale ratio
+  const fmt = n => '~' + Math.round(n * r / 100) * 100 + ' ₸';
+  const fmtFixed = n => '~' + n + ' ₸'; // for fixed items (veggies etc)
+
+  // Quantities scale with calories
+  const chickenKg  = Math.max(1, (1.4 * r)).toFixed(1);
+  const eggs       = Math.round(21 * r);
+  const mackerelKg = Math.max(0.8, (1.1 * r)).toFixed(1);
+  const tvorogKg   = Math.max(0.5, (0.9 * r)).toFixed(1);
+  const milkL      = Math.max(1, Math.round(2 * r));
+  const buckwheatKg= Math.max(0.5, (0.7 * r)).toFixed(1);
+  const oatKg      = Math.max(0.5, (0.7 * r)).toFixed(1);
+  const riceKg     = Math.max(0.5, (0.6 * r)).toFixed(1);
+  const potatoKg   = Math.max(1, Math.round(2 * r));
+  const breadPcs   = Math.max(1, Math.round(2 * r));
+
+  // Prices per unit (Astana, tenge)
+  const chickenPrice  = Math.round(1400 * parseFloat(chickenKg));
+  const eggsPrice     = Math.round(eggs * 60);
+  const mackerelPrice = Math.round(1000 * parseFloat(mackerelKg));
+  const tvorogPrice   = Math.round(1400 * parseFloat(tvorogKg));
+  const milkPrice     = Math.round(350 * milkL);
+  const buckwPrice    = Math.round(500 * parseFloat(buckwheatKg));
+  const oatPrice      = Math.round(400 * parseFloat(oatKg));
+  const ricePrice     = Math.round(450 * parseFloat(riceKg));
+  const potatoPrice   = Math.round(150 * potatoKg);
+  const breadPrice    = Math.round(300 * breadPcs);
+
+  // Fixed items
+  const fixedTotal = 150+200+500+600+300+700+500+400+700+400+300;
+
+  const varTotal = chickenPrice+eggsPrice+mackerelPrice+tvorogPrice+milkPrice+
+                   buckwPrice+oatPrice+ricePrice+potatoPrice+breadPrice;
+  const grandTotal = varTotal + fixedTotal;
+  const dayAvg = Math.round(grandTotal / 7 / 100) * 100;
+
+  const items = (list) => list.map(([name, qty, price]) =>
+    `<div class="grocery-item"><span>${name} — ${qty}</span><span class="grocery-price">~${price.toLocaleString()} ₸</span></div>`
+  ).join('');
+
+  document.getElementById('grocery-content').innerHTML = `
+    <div class="grocery-section">
+      <div class="grocery-title">🥩 Белок</div>
+      ${items([
+        ['Куриные бёдра', chickenKg+' кг', chickenPrice],
+        ['Яйца', eggs+' шт', eggsPrice],
+        ['Скумбрия мороженая', mackerelKg+' кг', mackerelPrice],
+        ['Творог 5–9%', tvorogKg+' кг', tvorogPrice],
+        ['Молоко 2.5%', milkL+' л', milkPrice],
+      ])}
+    </div>
+    <div class="grocery-section">
+      <div class="grocery-title">🌾 Крупы</div>
+      ${items([
+        ['Гречка', buckwheatKg+' кг', buckwPrice],
+        ['Овсянка', oatKg+' кг', oatPrice],
+        ['Рис', riceKg+' кг', ricePrice],
+        ['Картошка', potatoKg+' кг', potatoPrice],
+        ['Хлеб цельнозерновой', breadPcs+' шт', breadPrice],
+      ])}
+    </div>
+    <div class="grocery-section">
+      <div class="grocery-title">🥦 Овощи и фрукты <span style="font-size:11px; color:var(--muted); font-family:'Onest',sans-serif; font-weight:400;">(количество одинаковое)</span></div>
+      ${items([
+        ['Капуста', '1 кг', 150],
+        ['Морковь', '1 кг', 200],
+        ['Огурцы', '1 кг', 500],
+        ['Помидоры', '1 кг', 600],
+        ['Лук, чеснок, зелень', '—', 300],
+        ['Замороженные овощи', '1 кг', 700],
+        ['Бананы', '1 кг', 500],
+        ['Яблоки', '1 кг', 400],
+      ])}
+    </div>
+    <div class="grocery-section">
+      <div class="grocery-title">🫙 Прочее</div>
+      ${items([
+        ['Масло подсолнечное', '1 л', 700],
+        ['Соевый соус', '1 бут.', 400],
+        ['Соль, специи', '—', 300],
+      ])}
+    </div>
+    <div class="grocery-total">
+      <span style="font-size:13px; color:var(--muted)">Закупка на неделю</span>
+      <span style="font-family:'Unbounded',sans-serif; font-size:16px; color:var(--accent2)">~${grandTotal.toLocaleString()} ₸</span>
+    </div>
+    <div class="daily-cost" style="margin-top:8px;">
+      <span class="daily-cost-label">💰 Выходит в среднем в день</span>
+      <span class="daily-cost-val">~${dayAvg.toLocaleString()} ₸</span>
+    </div>
+    <div style="font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7;">
+      📊 Количество продуктов рассчитано под твои <strong style="color:var(--text)">${U.kcal} ккал/день</strong>. Чем больше калораж — тем больше порции и закупка. Овощи фиксированные — их объём не меняется.
+    </div>
+  `;
+}
+
+// ===== WORKOUT =====
+function getWorkoutPlan() {
+  const age    = U.age;
+  const gain   = U.gain;
+  const gender = U.gender;
+  const bmi    = parseFloat(U.bmi);
+
+  // Intensity label based on age
+  const isSenior  = age >= 50;
+  const isYoung   = age <= 30;
+
+  // Cardio duration: more for fat loss, less for gain; longer for high BMI
+  const cardioDur  = gain ? 30 : (bmi >= 35 ? 50 : 40);
+  const cardioType = gender === 'f'
+    ? (isSenior ? 'Скандинавская ходьба / бассейн' : 'Эллипс / велосипед / танцы')
+    : (isSenior ? 'Быстрая ходьба / велосипед' : 'Эллипс / бег трусцой');
+  const stretching = isSenior ? 25 : 15;
+
+  // Sets/reps logic
+  // Loss → more reps, less weight; Gain → less reps, more weight
+  // Senior → less intensity, joint-friendly
+  const setsH  = gain ? '4' : '3';  // heavy compound sets
+  const setsL  = '3';
+  const repsH  = gain ? '6–8' : (isSenior ? '12–15' : '10–12');
+  const repsM  = gain ? '8–10' : (isSenior ? '15' : '12');
+  const repsHi = isSenior ? '15–20' : (gain ? '12' : '15–20');
+
+  // Exercise selection by gender + age + goal
+  const squat   = isSenior ? 'Присед с гантелями (неглубокий)' : 'Присед со штангой';
+  const bench   = gender === 'f'
+    ? (gain ? 'Жим гантелей лёжа' : 'Отжимания / жим гантелей')
+    : (isSenior ? 'Жим гантелей лёжа' : 'Жим штанги лёжа');
+  const row     = isSenior ? 'Горизонтальная тяга сидя' : 'Тяга штанги в наклоне';
+  const shoulder = gender === 'f' ? 'Подъёмы гантелей в стороны' : 'Жим гантелей сидя';
+  const deadlift = isSenior ? 'Становая тяга с гантелями (лёгкая)' : (gain ? 'Становая тяга' : 'Становая тяга (лёгкая)');
+  const lunge   = gender === 'f' ? 'Выпады с гантелями' : 'Выпады';
+  const rdl     = 'Румынская тяга';
+  const pulldown = 'Тяга верхнего блока';
+  const core1   = isSenior ? 'Планка (на локтях)' : 'Планка';
+  const core2   = gender === 'f' ? 'Скручивания / подъёмы ног' : 'Скручивания';
+  const core3   = gender === 'f' ? 'Ягодичный мостик' : 'Велосипед (пресс)';
+  const pushup  = gender === 'f' ? 'Отжимания (с колен или полные)' : 'Отжимания';
+  const calf    = 'Подъёмы на носки';
+
+  // Plank duration
+  const plankDur = isSenior ? '30 сек' : (gain ? '45 сек' : '45–60 сек');
+
+  // Generate note for workout header
+  const profileNote = [
+    gender === 'f' ? '👩 Женская программа' : '👨 Мужская программа',
+    gain ? '💪 Набор массы' : '🔥 Жиросжигание',
+    isSenior ? '· щадящий режим (50+)' : isYoung ? '· интенсивный режим' : '· стандартный режим'
+  ].join(' ');
+
+  return { profileNote, days: [
+    { name: 'Понедельник — Силовая A (низ тела)', type: 'strength', exercises: [
+      { name: squat,    sets: `${setsH}×${repsH}` },
+      { name: rdl,      sets: `${setsH}×${repsM}` },
+      { name: lunge,    sets: `${setsL}×${repsM} каждая` },
+      { name: calf,     sets: `3×${repsHi}` },
+      { name: core1,    sets: `3×${plankDur}` },
+    ]},
+    { name: 'Вторник — Кардио', type: 'cardio', exercises: [
+      { name: cardioType,           sets: `${cardioDur} мин` },
+      { name: 'Пульс 120–140 уд/мин', sets: 'контроль' },
+    ]},
+    { name: 'Среда — Силовая B (верх тела)', type: 'strength', exercises: [
+      { name: bench,    sets: `${setsH}×${repsH}` },
+      { name: row,      sets: `${setsH}×${repsH}` },
+      { name: pulldown, sets: `${setsL}×${repsM}` },
+      { name: shoulder, sets: `${setsL}×${repsHi}` },
+      { name: core2,    sets: `3×20` },
+    ]},
+    { name: 'Четверг — Отдых / лёгкая прогулка', type: 'rest', exercises: [] },
+    { name: 'Пятница — Силовая C (полное тело)', type: 'strength', exercises: [
+      { name: deadlift, sets: `${setsH}×${gain ? '5' : repsH}` },
+      { name: pushup,   sets: `3×максимум` },
+      { name: pulldown, sets: `${setsL}×${repsM}` },
+      { name: shoulder, sets: `${setsL}×${repsHi}` },
+      { name: core3,    sets: `3×20` },
+    ]},
+    { name: 'Суббота — Кардио + растяжка', type: 'cardio', exercises: [
+      { name: cardioType,  sets: `${cardioDur + 10} мин` },
+      { name: 'Растяжка',  sets: `${stretching} мин` },
+    ]},
+    { name: 'Воскресенье — Отдых', type: 'rest', exercises: [] },
+  ]};
+}
+
+function renderWorkout() {
+  const { profileNote, days } = getWorkoutPlan();
+  const header = `<div class="section" style="margin-bottom:16px; padding:14px 18px; background:rgba(200,245,66,0.06); border:1px solid rgba(200,245,66,0.15); border-radius:12px;">
+    <div style="font-size:13px; line-height:1.7; color:var(--text)">${profileNote}</div>
+    <div style="font-size:12px; color:var(--muted); margin-top:6px;">3 силовых + 2 кардио в неделю · нажимай на упражнения чтобы отмечать</div>
+  </div>`;
+  const body = days.map(day => {
+    const bc = day.type==='strength' ? 'badge-strength' : day.type==='cardio' ? 'badge-cardio' : 'badge-rest';
+    const bt = day.type==='strength' ? 'Силовая' : day.type==='cardio' ? 'Кардио' : 'Отдых';
+    return `<div class="workout-day">
+      <div class="workout-day-header">
+        <div class="workout-day-name">${day.name}</div>
+        <span class="workout-badge ${bc}">${bt}</span>
+      </div>
+      ${day.type==='rest'
+        ? `<div class="rest-day"><span>😴</span>Восстановление — тоже часть тренировки</div>`
+        : `<div class="exercise-list">${day.exercises.map(ex =>
+            `<div class="exercise" onclick="this.classList.toggle('done-ex')">
+              <span>${ex.name}</span><span class="ex-sets">${ex.sets}</span>
+            </div>`).join('')}</div>`}
+    </div>`;
+  }).join('');
+  document.getElementById('workout-plan').innerHTML = header + body;
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggle(el) { el.classList.toggle('done'); }
+
+// Init preview
+calcPreview();
+</script>
+</body>
+</html>
